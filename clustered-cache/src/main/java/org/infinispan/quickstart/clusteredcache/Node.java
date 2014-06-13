@@ -43,137 +43,165 @@ import java.util.TreeSet;
 
 public class Node {
 
-   private static final BasicLogger log = Logger.getLogger(Node.class);
+	private static final BasicLogger log = Logger.getLogger(Node.class);
 
-   private final boolean useXmlConfig;
-   private final String cacheName;
-   private final String nodeName;
-   private volatile boolean stop = false;
+	private final boolean useXmlConfig;
+	private final String cacheName;
+	private final String nodeName;
+	private volatile boolean stop = false;
 
-   public Node(boolean useXmlConfig, String cacheName, String nodeName) {
-      this.useXmlConfig = useXmlConfig;
-      this.cacheName = cacheName;
-      this.nodeName = nodeName;
-   }
+	public Node(boolean useXmlConfig, String cacheName, String nodeName) {
+		this.useXmlConfig = useXmlConfig;
+		this.cacheName = cacheName;
+		this.nodeName = nodeName;
+	}
 
-   public static void main(String[] args) throws Exception {
-      boolean useXmlConfig = false;
-      String cache = "repl";
-      String nodeName = null;
+	public static void main(String[] args) throws Exception {
+		boolean useXmlConfig = false;
+		String cache = "dist";
+		String nodeName = null;
 
-      for (String arg : args) {
-         if ("-x".equals(arg)) {
-            useXmlConfig = true;
-         } else if ("-p".equals(arg)) {
-            useXmlConfig = false;
-         } else if ("-d".equals(arg)) {
-            cache = "dist";
-         } else if ("-r".equals(arg)) {
-            cache = "repl";
-         } else {
-            nodeName = arg;
-         }
-      }
-      new Node(useXmlConfig, cache, nodeName).run();
-   }
-   
-   public void run() throws IOException, InterruptedException {
-      EmbeddedCacheManager cacheManager = createCacheManager();
-      final Cache<String, String> cache = cacheManager.getCache(cacheName);
-      System.out.printf("Cache %s started on %s, cache members are now %s\n", cacheName, cacheManager.getAddress(),
-            cache.getAdvancedCache().getRpcManager().getMembers());
+		for (String arg : args) {
+			if ("-x".equals(arg)) {
+				useXmlConfig = true;
+			} else if ("-p".equals(arg)) {
+				useXmlConfig = false;
+			} else if ("-d".equals(arg)) {
+				cache = "dist";
+			} else if ("-r".equals(arg)) {
+				cache = "repl";
+			} else {
+				nodeName = arg;
+			}
+		}
+		new Node(useXmlConfig, cache, nodeName).run();
+	}
 
-      // Add a listener so that we can see the puts to this node
-      cache.addListener(new LoggingListener());
+	public void run() throws IOException, InterruptedException {
+		EmbeddedCacheManager cacheManager = createCacheManager();
+		final Cache<String, String> cache = cacheManager.getCache(cacheName);
+		System.out.printf("Cache %s started on %s, cache members are now [%s]\n", cacheName, cacheManager.getAddress(),
+				cache.getAdvancedCache().getRpcManager().getMembers());
 
-      printCacheContents(cache);
+		// Add a listener so that we can see the puts to this node
+		//cache.addListener(new LoggingListener());
 
-      Thread putThread = new Thread() {
-         @Override
-         public void run() {
-            int counter = 0;
-            while (!stop) {
-               try {
-                  cache.put("key-" + counter, "" + cache.getAdvancedCache().getRpcManager().getAddress() + "-" + counter);
-               } catch (Exception e) {
-                  log.warnf("Error inserting key into the cache", e);
-               }
-               counter++;
+		printCacheContents(cache);
 
-               try {
-                  Thread.sleep(1000);
-               } catch (InterruptedException e) {
-                  break;
-               }
-            }
-         }
-      };
-      putThread.start();
+		Thread putThread = new Thread() {
+			@Override
+			public void run() {
+				int counter = 0;
+				int fl = 0;
+				double _coupon = 0.0;
+				long duration = 0;
+				long start = 0;
+				String flString = "";
+				while (!stop) {
+					try {
 
-      System.out.println("Press Enter to print the cache contents, Ctrl+D/Ctrl+Z to stop.");
-      while (System.in.read() > 0) {
-         printCacheContents(cache);
-      }
 
-      stop = true;
-      putThread.join();
-      cacheManager.stop();
-      System.exit(0);
-   }
+						//cache.put("key-" + counter, "" + cache.getAdvancedCache().getRpcManager().getAddress() + "-" + counter);
+						//Thread.sleep(10000);
+						_coupon = Math.random() * 5.0 + 2.0;
+						fl = (int) Math.floor(_coupon);
 
-   /**
-    * {@link org.infinispan.Cache#entrySet()}
-    * @param cache
-    */
-   private void printCacheContents(Cache<String, String> cache) {
-      System.out.printf("Cache contents on node %s\n", cache.getAdvancedCache().getRpcManager().getAddress());
+						if (nodeName.equals("LEFT")) {
+							start = System.nanoTime();
+							cache.put("369604103", "" + fl);
+							duration = System.nanoTime() - start;
+						} else {
+							start = System.nanoTime();
+							flString = cache.get("369604103");
+							flString = ((flString != null) ? flString : ""+fl);
+							duration = System.nanoTime() - start;
+						}
 
-      ArrayList<Map.Entry<String, String>> entries = new ArrayList<Map.Entry<String, String>>(cache.entrySet());
-      Collections.sort(entries, new Comparator<Map.Entry<String, String>>() {
-         @Override
-         public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
-            return o1.getKey().compareTo(o2.getKey());
-         }
-      });
-      for (Map.Entry<String, String> e : entries) {
-         System.out.printf("\t%s = %s\n", e.getKey(), e.getValue());
-      }
-      System.out.println();
-   }
+					} catch (Exception e) {
+						log.warnf("Error inserting key into the cache", e);
+					}
+					counter++;
 
-   private EmbeddedCacheManager createCacheManager() throws IOException {
-      if (useXmlConfig) {
-         return createCacheManagerFromXml();
-      } else {
-         return createCacheManagerProgrammatically();
-      }
-   }
+					if (nodeName.equals("LEFT")) {
+						System.out.printf("counter=[%d]  cache.put('369604103',%.3f%%);   took %d nanos \n",
+								counter,
+								(1.0 * fl),
+								duration);
+					} else {
+						System.out.printf("counter=[%d]  fl=[%s%%] = cache.get('369604103');   took %d nanos \n",
+								counter,
+								(flString),
+								duration);
+					}
 
-   private EmbeddedCacheManager createCacheManagerProgrammatically() {
-      System.out.println("Starting a cache manager with a programmatic configuration");
-      DefaultCacheManager cacheManager = new DefaultCacheManager(
-            GlobalConfigurationBuilder.defaultClusteredBuilder()
-                  .transport().nodeName(nodeName).addProperty("configurationFile", "jgroups.xml")
-                  .build(),
-            new ConfigurationBuilder()
-                  .clustering()
-                  .cacheMode(CacheMode.REPL_SYNC)
-                  .build()
-      );
-      // The only way to get the "repl" cache to be exactly the same as the default cache is to not define it at all
-      cacheManager.defineConfiguration("dist", new ConfigurationBuilder()
-            .clustering()
-            .cacheMode(CacheMode.DIST_SYNC)
-            .hash().numOwners(2)
-            .build()
-      );
-      return cacheManager;
-   }
+				}
+			}
+		};
+		putThread.start();
 
-   private EmbeddedCacheManager createCacheManagerFromXml() throws IOException {
-      System.out.println("Starting a cache manager with an XML configuration");
-      System.setProperty("nodeName", nodeName);
-      return new DefaultCacheManager("infinispan.xml");
-   }
+		System.out.println("Press Enter to print the cache contents, Ctrl+D/Ctrl+Z to stop.");
+		while (System.in.read() > 0) {
+			printCacheContents(cache);
+		}
+
+		stop = true;
+		putThread.join();
+		cacheManager.stop();
+		System.exit(0);
+	}
+
+	/**
+	 * {@link org.infinispan.Cache#entrySet()}
+	 *
+	 * @param cache
+	 */
+	private void printCacheContents(Cache<String, String> cache) {
+		System.out.printf("Cache contents on node %s\n", cache.getAdvancedCache().getRpcManager().getAddress());
+
+		ArrayList<Map.Entry<String, String>> entries = new ArrayList<Map.Entry<String, String>>(cache.entrySet());
+		Collections.sort(entries, new Comparator<Map.Entry<String, String>>() {
+			@Override
+			public int compare(Map.Entry<String, String> o1, Map.Entry<String, String> o2) {
+				return o1.getKey().compareTo(o2.getKey());
+			}
+		});
+		for (Map.Entry<String, String> e : entries) {
+			System.out.printf("\t%s = %s\n", e.getKey(), e.getValue());
+		}
+		System.out.println();
+	}
+
+	private EmbeddedCacheManager createCacheManager() throws IOException {
+
+		return createCacheManagerProgrammatically();
+
+	}
+
+	private EmbeddedCacheManager createCacheManagerProgrammatically() {
+		System.out.println("Starting a cache manager with a programmatic configuration");
+		DefaultCacheManager cacheManager = new DefaultCacheManager(
+				GlobalConfigurationBuilder.defaultClusteredBuilder()
+						.transport().nodeName(nodeName).addProperty("configurationFile", "jgroups.xml")
+						.build(),
+				new ConfigurationBuilder()
+						.clustering()
+						.cacheMode(CacheMode.DIST_SYNC)
+						.build()
+		);
+		// The only way to get the "repl" cache to be exactly the same as the default cache is to not define it at all
+		cacheManager.defineConfiguration("dist", new ConfigurationBuilder()
+				.clustering()
+				.cacheMode(CacheMode.DIST_SYNC)
+				.hash().numOwners(2)
+				.build()
+		);
+		return cacheManager;
+	}
+
+	private EmbeddedCacheManager createCacheManagerFromXml() throws IOException {
+		System.out.println("Starting a cache manager with an XML configuration");
+		System.setProperty("nodeName", nodeName);
+		return new DefaultCacheManager("infinispan.xml");
+	}
 
 }
