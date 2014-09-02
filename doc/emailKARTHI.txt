@@ -1,0 +1,27 @@
+ 
+ 
+ Ben D. Cotton III
+ J.P.Morgan
+ Liquidity Risk Technology
+ 277 Park Ave  Desk 08-GG64
+ New York, NY 10172-0003
+ 212.622.5010
+ ben.cotton@jpmorgan.com
+ 
+ 
+ From: Prabhakaran, Karthi [mailto:karthi.prabhakaran@baml.com] 
+ Sent: Tuesday, September 02, 2014 11:40 AM
+ To: Cotton, Ben
+ Subject: JCACHE
+ 
+ Ben, was exploring ehcache for distributed caching and noticed that they provide a JCACHE implementation. Are you involved with this implementation?
+  
+ ehcache-jcache-1.2-distribution.tar.gz
+ JSR107 JCACHE Implementation
+  
+  
+ Karthi
+  
+  
+ ________________________________________
+ This message, and any attachments, is for the intended recipient(s) only, may contain information that is privileged, confidential and/or proprietary and subject to important terms and conditions available at http://www.bankofamerica.com/emaildisclaimer. If you are not the intended recipient, please delete this message.
